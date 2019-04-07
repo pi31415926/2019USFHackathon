@@ -3,14 +3,15 @@ package p2
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 /*
 Block structure
 */
 type Block struct {
-	Header *Header
-
+	Header      *Header
+	Votes       int
 	InsertedMap map[string]string
 }
 
@@ -31,20 +32,22 @@ type BlockJson struct {
 	Hash       string            `json:"Hash"`
 	Height     int32             `json:"Height"`
 	ParentHash string            `json:"ParentHash"`
-	Mpt        map[string]string `json:"mpt"`
+	Mpt        map[string]string `json:"article"`
 	TimeStamp  int64             `json:"timeStamp"`
+	Votes      int               `json:"Votes"`
 }
 
 /*
 Description: This function takes arguments(such as Height, ParentHash, and value of MPT type) and forms a block. This is a method of the block struct.
 */
-func (block *Block) Initial(Hash string, Height int32, ParentHash string, Mpt map[string]string, TimeStamp int64) {
+func (block *Block) Initial(Hash string, Height int32, ParentHash string, Mpt map[string]string, TimeStamp int64, votes int) {
 	block.Header = new(Header)
 	block.Header.Hash = Hash
 	block.Header.Height = Height
 	block.Header.ParentHash = ParentHash
 	block.Header.Timestamp = TimeStamp
 	block.InsertedMap = Mpt
+	block.Votes = votes
 }
 
 /*
@@ -57,7 +60,7 @@ func DecodeFromJson(jsonString string) (block Block) {
 
 	err := json.Unmarshal([]byte(jsonString), &blockJson)
 	if err == nil {
-		block.Initial(blockJson.Hash, blockJson.Height, blockJson.ParentHash, blockJson.Mpt, blockJson.TimeStamp)
+		block.Initial(blockJson.Hash, blockJson.Height, blockJson.ParentHash, blockJson.Mpt, blockJson.TimeStamp, blockJson.Votes)
 		return block
 	} else {
 		fmt.Println(err)
@@ -69,19 +72,29 @@ func DecodeFromJson(jsonString string) (block Block) {
 /*
 Description: This function encodes a block instance into a JSON format string. Note that the block's value is an MPT, and you have to record all of the (key, value) pairs that have been inserted into the MPT in your JSON string.
 */
-func EncodeToJSON(block *Block) (jsonString string) {
+func EncodeToJSON(block *Block) (jsonString string, err error) {
 	var blockJson BlockJson
 	blockJson.Hash = block.Header.Hash
 	blockJson.Height = block.Header.Height
 	blockJson.ParentHash = block.Header.ParentHash
 	blockJson.TimeStamp = block.Header.Timestamp
 	blockJson.Mpt = block.InsertedMap
+	blockJson.Votes = block.Votes
 
 	byteJson, err := json.Marshal(blockJson)
 	if err == nil {
-		return string(byteJson)
+		return string(byteJson), nil
 	} else {
 		fmt.Println(err)
-		return ""
+		return "", err
 	}
+}
+
+func TestEncodeToJSON() (jsonString string, err error) {
+	var newblock Block
+	newMap := make(map[string]string)
+	newMap["title"] = "dbsys"
+	newMap["content"] = "dvacgdv"
+	newblock.Initial("dsbhc", 3, "adbhvjffdb", newMap, time.Now().Unix(), 0)
+	return EncodeToJSON(&newblock)
 }

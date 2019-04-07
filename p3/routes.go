@@ -42,4 +42,28 @@ var routes = Routes{
 		"/start",
 		Start,
 	},
+	Route{
+		"DownloadToUsers",
+		"GET",
+		"/downloadtousers",
+		DownloadToUsers,
+	},
+	Route{
+		"SaveNode",
+		"POST",
+		"/savenode",
+		SaveNode,
+	},
+	Route{
+		"AddVote",
+		"POST",
+		"/addvote",
+		AddVote,
+	},
+	Route{
+		"SynchronizeAll",
+		"POST",
+		"/synchronizeall",
+		SynchronizeAll,
+	},
 }

@@ -1,6 +1,7 @@
 package p2
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -53,7 +54,7 @@ func (blockChain *BlockChain) Insert(block Block) {
 		return
 	} else {
 		if targetBlocks == nil {
-			targetBlocks = []Block{}
+			return
 		}
 		blockChain.Chain[block.Header.Height] = append(targetBlocks, block)
 		if block.Header.Height > blockChain.Length {
@@ -68,21 +69,26 @@ Description: This function iterates over all the blocks, generate blocks' JsonSt
 Return type: string
 */
 func (blockChain *BlockChain) EncodeToJson() (jsonString string, err error) {
-	resultString := "["
+	b := new(bytes.Buffer)
+	fmt.Fprintf(b, "[")
 	position := 0
 	for _, v := range blockChain.Chain {
 		for i := range v {
 			block := v[i]
+			blockJson, err := EncodeToJSON(&block)
+			if err != nil {
+				return "", err
+			}
 			if position == 0 {
-				resultString = resultString + EncodeToJSON(&block)
+				fmt.Fprintf(b, blockJson)
 			} else {
-				resultString = resultString + ", " + EncodeToJSON(&block)
+				fmt.Fprintf(b, ", %s", blockJson)
 			}
 		}
 		position += 1
 	}
-	resultString = resultString + "]"
-	return resultString, nil
+	fmt.Fprintf(b, "]")
+	return b.String(), nil
 }
 
 /*

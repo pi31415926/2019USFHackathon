@@ -173,12 +173,6 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 
 func StartHeartBeat() {
 	if len(Peers.Copy()) != 0 {
-
-		peerMap := Peers.Copy()
-		for address, id := range peerMap {
-			StartToSendHeartBeat(address, id)
-		}
-		time.Sleep(10 * time.Second)
 		for true {
 			peerMap := Peers.Copy()
 			peerMapJson, err := Peers.PeerMapToJson()
@@ -216,12 +210,68 @@ func SendHeartBeat(address string, selfId int32, peerMapBase64 string) {
 	SBC.UpdateEntireBlockChain(rData.PeerMapJson)
 }
 
-func StartToSendHeartBeat(address string, id int32) {
-	heartBeatDataJson, _ := json.Marshal(data.NewHeartBeatData(false, id, "", "", SELF_ADDR))
-	_, err := http.Post(address+"/heartbeat/receive", "application/json; charset=UTF-8", strings.NewReader(string(heartBeatDataJson)))
-
+func DownloadToUsers(w http.ResponseWriter, r *http.Request) {
+	blockchainJson, err := SBC.BlockChainToJson()
 	if err != nil {
-		data.PrintError(err, "SendHeartBeat")
-		return
+		w.WriteHeader(417)
+		fmt.Fprint(w, "Expectation Failed")
+	} else {
+		fmt.Fprint(w, "{\"nodes\":"+blockchainJson+"}")
 	}
+}
+
+func SaveNode(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var newNode NewNode
+	err := decoder.Decode(&newNode)
+	if err != nil {
+		w.WriteHeader(417)
+		fmt.Fprint(w, "Expectation Failed")
+	} else {
+		newBlock := SBC.GenBlock(newNode.Height, newNode.ParentHash, newNode.votes, newNode.article)
+		fmt.Fprint(w, newBlock.Header.Hash)
+	}
+
+}
+
+type NewNode struct {
+	Height     int32
+	votes      int
+	article    map[string]string
+	ParentHash string
+}
+
+func AddVote(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var targetNode SearchNode
+	err := decoder.Decode(&targetNode)
+	if err != nil {
+		w.WriteHeader(417)
+		fmt.Fprint(w, "Expectation Failed")
+	} else {
+		targetBlocks, hasFound := SBC.Get(targetNode.Height)
+		if hasFound {
+			for i := range targetBlocks {
+				if targetBlocks[i].Header.Hash == targetNode.hash {
+					targetBlocks[i].Votes = targetBlocks[i].Votes + 1
+				}
+			}
+			w.WriteHeader(200)
+			fmt.Fprint(w, "OK")
+		} else {
+			w.WriteHeader(417)
+			fmt.Fprint(w, "Expectation Failed")
+		}
+	}
+
+}
+
+type SearchNode struct {
+	Height   int32
+	addvotes int
+	hash     string
+}
+
+func SynchronizeAll(w http.ResponseWriter, r *http.Request) {
+	DownloadToUsers(w, r)
 }

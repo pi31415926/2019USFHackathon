@@ -61,16 +61,16 @@ func (sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 	return sbc.bc.EncodeToJson()
 }
 
-func (sbc *SyncBlockChain) GenBlock() p2.Block {
+func (sbc *SyncBlockChain) GenBlock(height int32, targetHash string, votes int, article map[string]string) p2.Block {
 	newBlock := p2.Block{}
-	//TODO change the 0 into position index
-	newBlock.Header.ParentHash = sbc.bc.Get(sbc.bc.Length)[0].Header.Hash
-	newBlock.Header.Height = sbc.bc.Length + 1
+	newBlock.InsertedMap = article
+	newBlock.Header.ParentHash = targetHash
+	newBlock.Header.Height = height
 	newBlock.Header.Timestamp = time.Now().Unix()
-	//TODO change the 0 into position index
 	strToBeHashed := string(newBlock.Header.Height) + string(newBlock.Header.Timestamp) + newBlock.Header.ParentHash + MapToString(newBlock.InsertedMap)
 	sum256 := sha3.Sum256([]byte(strToBeHashed))
 	newBlock.Header.Hash = hex.EncodeToString(sum256[:])
+	sbc.Insert(newBlock)
 	return newBlock
 }
 func (sbc *SyncBlockChain) Show() string {
