@@ -1,7 +1,6 @@
 package p2
 
 import (
-	"../p1"
 	"encoding/json"
 	"fmt"
 )
@@ -10,8 +9,8 @@ import (
 Block structure
 */
 type Block struct {
-	Header      *Header
-	Value       *p1.MerklePatriciaTrie
+	Header *Header
+
 	InsertedMap map[string]string
 }
 
@@ -23,7 +22,6 @@ type Header struct {
 	Timestamp  int64
 	Hash       string
 	ParentHash string
-	Size       int32
 }
 
 /*
@@ -34,21 +32,17 @@ type BlockJson struct {
 	Height     int32             `json:"Height"`
 	ParentHash string            `json:"ParentHash"`
 	Mpt        map[string]string `json:"mpt"`
-	Size       int32             `json:"Size"`
 	TimeStamp  int64             `json:"timeStamp"`
 }
 
 /*
 Description: This function takes arguments(such as Height, ParentHash, and value of MPT type) and forms a block. This is a method of the block struct.
 */
-func (block *Block) Initial(Hash string, Height int32, ParentHash string, Mpt map[string]string, Size int32, TimeStamp int64) {
-	block.Value = new(p1.MerklePatriciaTrie)
-	block.Value.Initial()
+func (block *Block) Initial(Hash string, Height int32, ParentHash string, Mpt map[string]string, TimeStamp int64) {
 	block.Header = new(Header)
 	block.Header.Hash = Hash
 	block.Header.Height = Height
 	block.Header.ParentHash = ParentHash
-	block.Header.Size = Size
 	block.Header.Timestamp = TimeStamp
 	block.InsertedMap = Mpt
 }
@@ -63,10 +57,7 @@ func DecodeFromJson(jsonString string) (block Block) {
 
 	err := json.Unmarshal([]byte(jsonString), &blockJson)
 	if err == nil {
-		block.Initial(blockJson.Hash, blockJson.Height, blockJson.ParentHash, blockJson.Mpt, blockJson.Size, blockJson.TimeStamp)
-		for k, v := range blockJson.Mpt {
-			block.Value.Insert(k, v)
-		}
+		block.Initial(blockJson.Hash, blockJson.Height, blockJson.ParentHash, blockJson.Mpt, blockJson.TimeStamp)
 		return block
 	} else {
 		fmt.Println(err)
@@ -83,7 +74,6 @@ func EncodeToJSON(block *Block) (jsonString string) {
 	blockJson.Hash = block.Header.Hash
 	blockJson.Height = block.Header.Height
 	blockJson.ParentHash = block.Header.ParentHash
-	blockJson.Size = block.Header.Size
 	blockJson.TimeStamp = block.Header.Timestamp
 	blockJson.Mpt = block.InsertedMap
 

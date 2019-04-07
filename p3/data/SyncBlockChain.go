@@ -1,9 +1,11 @@
 package data
 
 import (
-	"../../p1"
 	"../../p2"
+	"bytes"
+	"encoding/hex"
 	"fmt"
+	"golang.org/x/crypto/sha3"
 	"sync"
 	"time"
 )
@@ -20,7 +22,7 @@ func NewBlockChain() SyncBlockChain {
 func (sbc *SyncBlockChain) Get(height int32) ([]p2.Block, bool) {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
-	return sbc.bc.Get(height), true //notice true part was missing
+	return sbc.bc.Get(height), true
 }
 
 func (sbc *SyncBlockChain) GetBlock(height int32, hash string) (p2.Block, bool) {
@@ -59,23 +61,37 @@ func (sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 	return sbc.bc.EncodeToJson()
 }
 
-func (sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
+func (sbc *SyncBlockChain) GenBlock() p2.Block {
 	newBlock := p2.Block{}
-
-	newBlock.Value = &mpt
+	//TODO change the 0 into position index
 	newBlock.Header.ParentHash = sbc.bc.Get(sbc.bc.Length)[0].Header.Hash
 	newBlock.Header.Height = sbc.bc.Length + 1
 	newBlock.Header.Timestamp = time.Now().Unix()
-	newBlock.Header.Hash = string(newBlock.Header.Height) + string(newBlock.Header.Timestamp) + newBlock.Header.ParentHash + newBlock.Value.Root + string(newBlock.Header.Size)
-	//TODO what about header
+	//TODO change the 0 into position index
+	strToBeHashed := string(newBlock.Header.Height) + string(newBlock.Header.Timestamp) + newBlock.Header.ParentHash + MapToString(newBlock.InsertedMap)
+	sum256 := sha3.Sum256([]byte(strToBeHashed))
+	newBlock.Header.Hash = hex.EncodeToString(sum256[:])
 	return newBlock
 }
-
 func (sbc *SyncBlockChain) Show() string {
 	return sbc.bc.Show()
 }
 
 func PrintError(err error, msg string) {
-	//TODO: check write message
 	fmt.Println(msg, err)
+}
+
+func MapToString(targetMap map[string]string) string {
+	b := new(bytes.Buffer)
+	for key, value := range targetMap {
+		fmt.Fprintf(b, "\"%s\":\"%s\"\n", key, value)
+	}
+	return b.String()
+}
+
+func TestMapToString() {
+	targetMap := make(map[string]string)
+	targetMap["ebyfuhjbre"] = "dsvj"
+	targetMap["dcu"] = "dsyvh"
+	fmt.Println(MapToString(targetMap))
 }

@@ -1,19 +1,16 @@
 package main
 
 import (
-	"./p3"
 	"./p3/data"
-	"log"
-	"net/http"
-	"os"
 )
 
 func main() {
-	data.TestPeerListRebalance()
-	router := p3.NewRouter()
-	if len(os.Args) > 1 {
-		log.Fatal(http.ListenAndServe(":"+os.Args[1], router))
-	} else {
-		log.Fatal(http.ListenAndServe(":6686", router))
-	}
+	//router := p3.NewRouter()
+	//if len(os.Args) == 2 {
+	//	http.Handle("/", http.FileServer(http.Dir("./frontEnd")))
+	//	log.Fatal(http.ListenAndServe(":"+os.Args[1], router))
+	//} else {
+	//	fmt.Println("usage: go run main.go <port number>")
+	//}
+	data.TestMapToString()
 }
