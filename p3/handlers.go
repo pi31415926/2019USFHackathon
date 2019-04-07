@@ -14,10 +14,12 @@ import (
 	"time"
 )
 
-var TA_SERVER = "http://localhost:6688"
-var REGISTER_SERVER = TA_SERVER + "/peer"
-var BC_DOWNLOAD_SERVER = TA_SERVER + "/upload"
-var SELF_ADDR = "http://localhost:6686"
+var FIRST_PORT = "6688"
+var SELF_PORT = "8866"
+var FIRST_SERVER = "http://localhost" + ":" + FIRST_PORT
+var REGISTER_SERVER = FIRST_SERVER + "/peer"
+var BC_DOWNLOAD_SERVER = FIRST_SERVER + "/upload"
+var SELF_ADDR = "http://localhost" + ":" + SELF_PORT
 
 var SBC data.SyncBlockChain
 var Peers data.PeerList
@@ -35,7 +37,7 @@ func Start(w http.ResponseWriter, r *http.Request) {
 	if ifStarted == false {
 		ifStarted = true
 		Register()
-		Peers = data.NewPeerList(Peers.GetSelfId(), 32)
+		Peers = data.NewPeerList(Peers.GetSelfId())
 		Download()
 		StartHeartBeat()
 	}
@@ -46,29 +48,13 @@ func Show(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n%s", Peers.Show(), SBC.Show())
 }
 
-// Register to TA's server, get an ID
+// Register to FIRST_SERVER, get an ID
 func Register() {
-	var client http.Client
-	resp, err := client.Get(REGISTER_SERVER)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	Peers.Register(int32(time.Now().Unix()))
 
-	if resp.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		bodyString := string(bodyBytes)
-		if err == nil {
-			id, err := strconv.ParseInt(bodyString, 10, 32)
-			if err != nil {
-				panic(err)
-			}
-			Peers.Register(int32(id)) //TODO: check if correct
-		}
-	}
 }
 
-// Download blockchain from TA server
+// Download blockchain from FIRST_SERVER
 func Download() {
 	var client http.Client
 	resp, err := client.Get(BC_DOWNLOAD_SERVER)
@@ -133,7 +119,6 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	//TODO: check if correct
 	comingIp := r.Header.Get("X-FORWARDED-FOR")
 	Peers.InjectPeerMapJson(heartBeat.PeerMapJson, comingIp, heartBeat.Id)
 
@@ -180,7 +165,6 @@ func AskForBlock(height int32, hash string) {
 
 func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 	heartBeatDataJson, _ := json.Marshal(heartBeatData)
-	Peers.Rebalance()
 	peerMap := Peers.Copy()
 	for address, _ := range peerMap {
 		http.Post(address+"/heartbeat/receive", "application/json; charset=UTF-8", strings.NewReader(string(heartBeatDataJson)))
@@ -190,14 +174,12 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 func StartHeartBeat() {
 	if len(Peers.Copy()) != 0 {
 
-		Peers.Rebalance()
 		peerMap := Peers.Copy()
 		for address, id := range peerMap {
 			StartToSendHeartBeat(address, id)
 		}
 		time.Sleep(10 * time.Second)
 		for true {
-			Peers.Rebalance()
 			peerMap := Peers.Copy()
 			peerMapJson, err := Peers.PeerMapToJson()
 			if err != nil {
@@ -209,7 +191,7 @@ func StartHeartBeat() {
 			}
 			time.Sleep(10 * time.Second)
 		}
-	}else{
+	} else {
 		for true {
 			if len(Peers.Copy()) != 0 {
 				StartHeartBeat()
@@ -220,7 +202,8 @@ func StartHeartBeat() {
 }
 
 func SendHeartBeat(address string, selfId int32, peerMapBase64 string) {
-	heartBeatDataJson, _ := json.Marshal(data.PrepareHeartBeatData(&SBC, selfId, peerMapBase64, address))
+	//TODO: change this part: check if there is new node
+	heartBeatDataJson, _ := json.Marshal(data.NewHeartBeatData(false, selfId, "", "", SELF_ADDR))
 	resp, err := http.Post(address+"/heartbeat/receive", "application/json; charset=UTF-8", strings.NewReader(string(heartBeatDataJson)))
 
 	bytes, _ := ioutil.ReadAll(resp.Body)
@@ -234,7 +217,7 @@ func SendHeartBeat(address string, selfId int32, peerMapBase64 string) {
 }
 
 func StartToSendHeartBeat(address string, id int32) {
-	heartBeatDataJson, _ := json.Marshal(data.NewHeartBeatData(false, id, "", "", SELF_ADDR)) //TODO: check NewHeartBeatData
+	heartBeatDataJson, _ := json.Marshal(data.NewHeartBeatData(false, id, "", "", SELF_ADDR))
 	_, err := http.Post(address+"/heartbeat/receive", "application/json; charset=UTF-8", strings.NewReader(string(heartBeatDataJson)))
 
 	if err != nil {

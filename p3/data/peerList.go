@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
-	"sort"
 	"sync"
 )
 
 type PeerList struct {
-	selfId    int32
-	peerMap   map[string]int32
-	maxLength int32
-	mux       sync.Mutex
+	selfId  int32
+	peerMap map[string]int32
+	mux     sync.Mutex
 }
 
 type PeerPair struct {
@@ -21,9 +18,8 @@ type PeerPair struct {
 	Id   int32  `json:"id"`
 }
 
-func NewPeerList(id int32, maxLength int32) PeerList {
+func NewPeerList(id int32) PeerList {
 	var peers PeerList
-	peers.maxLength = maxLength
 	peers.selfId = id
 	peers.peerMap = make(map[string]int32)
 	return peers
@@ -41,60 +37,6 @@ func (peers *PeerList) Delete(addr string) {
 		delete(peers.peerMap, addr)
 	}
 	peers.mux.Unlock()
-}
-
-func (peers *PeerList) Rebalance() {
-	peers.mux.Lock()
-	idArray := make([]int32, len(peers.peerMap))
-	peerReverseMap := make(map[int32]string)
-
-	i := 0
-	for k, v := range peers.peerMap {
-		idArray[i] = v
-		peerReverseMap[v] = k
-		i++
-	}
-	sort.Sort(Int32(idArray))
-
-	newIdArray := findClosestArray(peers.selfId, idArray, int(peers.maxLength/2))
-	newPeerMap := make(map[string]int32)
-
-	for i := range newIdArray {
-		newId := newIdArray[i]
-		newPeerMap[peerReverseMap[newId]] = newId
-	}
-	peers.peerMap = newPeerMap
-	peers.mux.Unlock()
-}
-
-func findClosestArray(target int32, originalArray []int32, rangeLen int) []int32 {
-	pivot := len(originalArray)
-	for i := range originalArray {
-		if originalArray[i] > target {
-			pivot = i
-			break
-		} else if originalArray[i] == target {
-			originalArray = append(originalArray[:i], originalArray[i+1:]...)
-			pivot = i
-			break
-		}
-	}
-
-	frontIndex := (((pivot - rangeLen) % len(originalArray)) + len(originalArray)) % len(originalArray)
-	backIndex := (((pivot + rangeLen) - 1) % len(originalArray)) + len(originalArray)%len(originalArray)
-
-	if frontIndex < backIndex {
-		return originalArray[frontIndex : backIndex+1]
-	} else if frontIndex > backIndex {
-		return append(originalArray[:backIndex+1], originalArray[frontIndex:]...)
-	} else {
-		if rangeLen == 0 {
-			return []int32{}
-		} else {
-			return originalArray
-		}
-
-	}
 }
 
 func (peers *PeerList) Show() string {
@@ -155,56 +97,4 @@ func (peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, senderAddr strin
 	} else {
 		fmt.Println(err1)
 	}
-}
-
-func TestPeerListRebalance() {
-	peers := NewPeerList(6, 4)
-	peers.Add("1111", 1)
-	peers.Add("4444", 4)
-	peers.Add("-1-1", -1)
-	peers.Add("0000", 0)
-	peers.Add("2121", 21)
-	peers.Rebalance()
-	expected := NewPeerList(6, 4)
-	expected.Add("1111", 1)
-	expected.Add("4444", 4)
-	expected.Add("2121", 21)
-	expected.Add("-1-1", -1)
-	fmt.Println(reflect.DeepEqual(peers, expected))
-
-	peers = NewPeerList(5, 2)
-	peers.Add("1111", 1)
-	peers.Add("4444", 4)
-	peers.Add("-1-1", -1)
-	peers.Add("0000", 0)
-	peers.Add("2121", 21)
-	peers.Rebalance()
-	expected = NewPeerList(5, 2)
-	expected.Add("4444", 4)
-	expected.Add("2121", 21)
-	fmt.Println(reflect.DeepEqual(peers, expected))
-
-	peers = NewPeerList(5, 4)
-	peers.Add("1111", 1)
-	peers.Add("7777", 7)
-	peers.Add("9999", 9)
-	peers.Add("11111111", 11)
-	peers.Add("2020", 20)
-	peers.Rebalance()
-	expected = NewPeerList(5, 4)
-	expected.Add("1111", 1)
-	expected.Add("7777", 7)
-	expected.Add("9999", 9)
-	expected.Add("2020", 20)
-	fmt.Println(reflect.DeepEqual(peers, expected))
-}
-
-type Int32 []int32
-
-func (u Int32) Len() int { return len(u) }
-
-func (u Int32) Less(i, j int) bool { return u[i] < u[j] }
-
-func (u Int32) Swap(i, j int) {
-	u[i], u[j] = u[j], u[i]
 }

@@ -1,7 +1,6 @@
 package p2
 
 import (
-	"../p1"
 	"encoding/json"
 	"fmt"
 )
@@ -10,8 +9,8 @@ import (
 Block structure
 */
 type Block struct {
-	Header      *Header
-	Value       *p1.MerklePatriciaTrie
+	Header *Header
+
 	InsertedMap map[string]string
 }
 
@@ -42,8 +41,6 @@ type BlockJson struct {
 Description: This function takes arguments(such as Height, ParentHash, and value of MPT type) and forms a block. This is a method of the block struct.
 */
 func (block *Block) Initial(Hash string, Height int32, ParentHash string, Mpt map[string]string, Size int32, TimeStamp int64) {
-	block.Value = new(p1.MerklePatriciaTrie)
-	block.Value.Initial()
 	block.Header = new(Header)
 	block.Header.Hash = Hash
 	block.Header.Height = Height
@@ -64,9 +61,6 @@ func DecodeFromJson(jsonString string) (block Block) {
 	err := json.Unmarshal([]byte(jsonString), &blockJson)
 	if err == nil {
 		block.Initial(blockJson.Hash, blockJson.Height, blockJson.ParentHash, blockJson.Mpt, blockJson.Size, blockJson.TimeStamp)
-		for k, v := range blockJson.Mpt {
-			block.Value.Insert(k, v)
-		}
 		return block
 	} else {
 		fmt.Println(err)

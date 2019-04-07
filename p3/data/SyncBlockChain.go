@@ -1,11 +1,9 @@
 package data
 
 import (
-	"../../p1"
 	"../../p2"
 	"fmt"
 	"sync"
-	"time"
 )
 
 type SyncBlockChain struct {
@@ -20,7 +18,7 @@ func NewBlockChain() SyncBlockChain {
 func (sbc *SyncBlockChain) Get(height int32) ([]p2.Block, bool) {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
-	return sbc.bc.Get(height), true //notice true part was missing
+	return sbc.bc.Get(height), true
 }
 
 func (sbc *SyncBlockChain) GetBlock(height int32, hash string) (p2.Block, bool) {
@@ -59,23 +57,10 @@ func (sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 	return sbc.bc.EncodeToJson()
 }
 
-func (sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
-	newBlock := p2.Block{}
-
-	newBlock.Value = &mpt
-	newBlock.Header.ParentHash = sbc.bc.Get(sbc.bc.Length)[0].Header.Hash
-	newBlock.Header.Height = sbc.bc.Length + 1
-	newBlock.Header.Timestamp = time.Now().Unix()
-	newBlock.Header.Hash = string(newBlock.Header.Height) + string(newBlock.Header.Timestamp) + newBlock.Header.ParentHash + newBlock.Value.Root + string(newBlock.Header.Size)
-	//TODO what about header
-	return newBlock
-}
-
 func (sbc *SyncBlockChain) Show() string {
 	return sbc.bc.Show()
 }
 
 func PrintError(err error, msg string) {
-	//TODO: check write message
 	fmt.Println(msg, err)
 }
