@@ -98,7 +98,14 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 	height := int32(heightIn64)
 	block, hasFound := SBC.GetBlock(height, hash)
 	if hasFound {
-		fmt.Fprint(w, p2.EncodeToJSON(&block))
+		blockJson, err := p2.EncodeToJSON(&block)
+		if err == nil {
+			fmt.Fprint(w, blockJson)
+		} else {
+			w.WriteHeader(204)
+			fmt.Fprint(w, "StatusNoContent")
+		}
+
 	} else {
 		w.WriteHeader(204)
 		fmt.Fprint(w, "StatusNoContent")
@@ -172,9 +179,10 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 }
 
 func StartHeartBeat() {
-	if len(Peers.Copy()) != 0 {
+
+	if !Peers.IsEmpty() {
+		peerMap := Peers.Copy()
 		for true {
-			peerMap := Peers.Copy()
 			peerMapJson, err := Peers.PeerMapToJson()
 			if err != nil {
 				panic(err)
@@ -187,7 +195,7 @@ func StartHeartBeat() {
 		}
 	} else {
 		for true {
-			if len(Peers.Copy()) != 0 {
+			if !Peers.IsEmpty() {
 				StartHeartBeat()
 			}
 			time.Sleep(10 * time.Second)

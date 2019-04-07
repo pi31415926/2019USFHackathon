@@ -10,6 +10,7 @@ import (
 type PeerList struct {
 	selfId  int32
 	peerMap map[string]int32
+	Num     int
 	mux     sync.Mutex
 }
 
@@ -21,6 +22,7 @@ type PeerPair struct {
 func NewPeerList(id int32) PeerList {
 	var peers PeerList
 	peers.selfId = id
+	peers.Num = 0
 	peers.peerMap = make(map[string]int32)
 	return peers
 }
@@ -28,7 +30,15 @@ func NewPeerList(id int32) PeerList {
 func (peers *PeerList) Add(addr string, id int32) {
 	peers.mux.Lock()
 	peers.peerMap[addr] = id
+	peers.Num = peers.Num + 1
 	peers.mux.Unlock()
+}
+
+func (peers *PeerList) IsEmpty() bool {
+	peers.mux.Lock()
+	isEmpty := peers.Num == 0
+	peers.mux.Unlock()
+	return isEmpty
 }
 
 func (peers *PeerList) Delete(addr string) {
@@ -36,6 +46,7 @@ func (peers *PeerList) Delete(addr string) {
 	if _, ok := peers.peerMap[addr]; ok {
 		delete(peers.peerMap, addr)
 	}
+	peers.Num = peers.Num - 1
 	peers.mux.Unlock()
 }
 
