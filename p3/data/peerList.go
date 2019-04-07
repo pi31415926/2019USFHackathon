@@ -36,7 +36,7 @@ func (peers *PeerList) Add(addr string, id int32) {
 
 func (peers *PeerList) IsEmpty() bool {
 	peers.mux.Lock()
-	isEmpty := peers.Num == 0
+	isEmpty := (peers.Num == 1)
 	peers.mux.Unlock()
 	return isEmpty
 }
@@ -108,4 +108,9 @@ func (peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, senderAddr strin
 	} else {
 		fmt.Println(err1)
 	}
+}
+
+func TestIsEmpty() bool {
+	peers := NewPeerList(2)
+	return peers.IsEmpty()
 }

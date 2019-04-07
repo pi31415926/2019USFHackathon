@@ -1,12 +1,12 @@
 package main
 
 import (
-	"./p2"
+	"./p3/data"
 	"fmt"
 )
 
 func main() {
 	//data.TestMapToString()
-	fmt.Println(p2.TestEncodeToJSON())
+	fmt.Println(data.TestIsEmpty())
 	return
 }
