@@ -1,21 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Divestory</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-	
-	<link  rel="stylesheet" href="template.css">
-</head>
-<body>
-	<div id="main">
-		<div class="space">
-			<button type="button" class="btn btn-secondary">
-				Secondary
-			</button>
-				
-		</div>
-			
-		</div>		
-	</div>
-</body>
+    <head>
+        <title>Divestory</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        
+        <link  rel="stylesheet" href="template.css">
+    </head>
+    <body>
+        <div id="tree_tab">
+            <div class="banner">
+                <span id="banner_title">View of Story Map</span>
+                <button type="button" class="banner_button btn-secondary">
+                    Random Button 
+                </button>
+ 
+            </div>
+            <div class="layout_tree">
+                <img src="../demo.png" class="map_img" alt="original plan for tree map">
+            </div>
+        </div>
+        <div id="story_tab">
+            <p id="article_title">[ Title of story ]</p>
+            <p id="article_content"> Content of Story<br>
+                                    This would have contained much
+                                    more if we had more time and
+                                    knowledge. O-o
+            </p>
+            <button id="like_button">Likes</button>
+            <p id="question"> How is this inclusive? </p>
+            <p> We encourage every person no matter who they are to
+                take part in the story and add their own versions and
+                ideas. Each version will branch off from the original
+                node the user decides to add their version to.
+            </p>
+            <button id="edit_button"><img id="edit_button_img" src="../pencil.png" alt="edit button picture"></button>
+        </div>
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src="test.js"></script>
+    </body>
 </html>
