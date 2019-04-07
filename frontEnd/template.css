@@ -55,6 +55,8 @@ html,body{
 
 .banner_button {
     position: inherit;
+    left: 90%
+    width: 50px;
     font-size: 12px;
     border-radius: 25px;
     text-align: center;
@@ -71,6 +73,9 @@ html,body{
 .map_img {
     width: 100%;
     height: 100%;
+    overflow_y: auto;
+    padding: 0px;
+    margin-bottom: 0;
 }
 
 #question {
