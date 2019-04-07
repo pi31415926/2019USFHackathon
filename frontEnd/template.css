@@ -55,12 +55,14 @@ html,body{
 
 .banner_button {
     position: inherit;
-    left: 90%
-    width: 50px;
+    width: 65px;
     font-size: 12px;
     border-radius: 25px;
     text-align: center;
-    flaot: right;
+    float: right;
+    margin-left: 180px;
+    padding: 0;
+
 }
 
 .layout_tree {
